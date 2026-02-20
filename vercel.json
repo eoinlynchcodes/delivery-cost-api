@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/rates", "destination": "/api/rates.js" },
+    { "source": "/api/health", "destination": "/api/health.js" },
+    { "source": "/api/test", "destination": "/api/test.js" }
+  ]
+}
