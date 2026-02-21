@@ -77,7 +77,7 @@ export default async function handler(req, res) {
                         service_code: 'LOCAL_DELIVERY',
                         total_price: String(totalPriceCents),
                         currency: 'EUR',
-                        description: `Delivery from our yard outside Mullingar N91PT7W`,
+                        description: `Delivery by our Truck`,
               }],
       });
 
