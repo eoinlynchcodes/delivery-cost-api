@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Pricing Settings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f6f6f7;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 560px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: #008060;
+      color: #fff;
+      padding: 24px 28px;
+    }
+    .card-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .card-header p { font-size: 13px; opacity: 0.85; }
+    .card-body { padding: 28px; }
+    .formula-box {
+      background: #f0faf5;
+      border: 1px solid #b3e0cf;
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: #1a5c45;
+    }
+    .formula-box strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .formula-box code { font-family: 'SF Mono', Consolas, monospace; font-size: 13px; }
+    .field-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #202223; margin-bottom: 6px; }
+    .field-hint { font-size: 12px; color: #6d7175; font-weight: 400; margin-left: 4px; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-prefix { position: absolute; left: 12px; color: #6d7175; font-size: 14px; pointer-events: none; z-index: 1; }
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px 10px 28px;
+      border: 1.5px solid #c9cccf;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #202223;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #008060;
+      box-shadow: 0 0 0 3px rgba(0,128,96,0.12);
+    }
+    .divider { border: none; border-top: 1px solid #e4e5e7; margin: 24px 0; }
+    .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #6d7175; margin-bottom: 16px; }
+    .actions { display: flex; gap: 12px; margin-top: 28px; }
+    .btn { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-primary { background: #008060; color: #fff; flex: 1; }
+    .btn-primary:hover { background: #006e52; }
+    .btn-primary:disabled { background: #a8c5bc; cursor: not-allowed; }
+    .btn-secondary { background: #fff; color: #202223; border: 1.5px solid #c9cccf; }
+    .btn-secondary:hover { background: #f6f6f7; }
+    .status { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-size: 13px; display: none; }
+    .status.success { background: #f0faf5; border: 1px solid #b3e0cf; color: #1a5c45; display: block; }
+    .status.error { background: #fff4f4; border: 1px solid #fdbdbd; color: #c0392b; display: block; }
+    .status.loading { background: #f5f5f5; border: 1px solid #e0e0e0; color: #6d7175; display: block; }
+    .preview-box { background: #fafbfb; border: 1px dashed #c9cccf; border-radius: 8px; padding: 16px; margin-top: 24px; }
+    .preview-box h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #6d7175; margin-bottom: 12px; }
+    .preview-row { display: flex; justify-content: space-between; font-size: 13px; color: #202223; margin-bottom: 6px; }
+    .preview-row:last-child { margin-bottom: 0; }
+    .preview-example { font-weight: 600; color: #008060; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="card-header">
+    <h1>Delivery Pricing Settings</h1>
+    <p>Manage the delivery cost formula for your store</p>
+  </div>
+  <div class="card-body">
+    <div class="formula-box">
+      <strong>Pricing Formula</strong>
+      <code>Delivery Fee = Base Fee + (Distance x EUR/km)</code>
+      <code style="margin-top:4px;display:block;">Free delivery if order total exceeds Threshold</code>
+    </div>
+    <div id="status" class="status loading">Loading current settings...</div>
+    <form id="pricing-form" style="display:none;">
+      <p class="section-title">Core Variables</p>
+      <div class="field-group">
+        <label for="baseFee">Base Fee <span class="field-hint">charged on every delivery</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">EUR</span>
+          <input type="number" id="baseFee" name="baseFee" step="0.01" min="0" placeholder="20.00" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="perKm">Rate per km <span class="field-hint">added for each km of distance</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">EUR</span>
+          <input type="number" id="perKm" name="perKm" step="0.01" min="0" placeholder="1.25" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="freeDeliveryThreshold">Free Delivery Threshold <span class="field-hint">set 0 to disable</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">EUR</span>
+          <input type="number" id="freeDeliveryThreshold" name="freeDeliveryThreshold" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+      </div>
+      <hr class="divider" />
+      <p class="section-title">Courier Fallback Rates</p>
+      <div class="field-group">
+        <label for="courierRateStandard">Standard Courier Rate <span class="field-hint">flat rate for most counties</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">EUR</span>
+          <input type="number" id="courierRateStandard" name="courierRateStandard" step="0.01" min="0" placeholder="69.00" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="courierRateFar">Far County Courier Rate <span class="field-hint">Cork, Kerry, Donegal</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">EUR</span>
+          <input type="number" id="courierRateFar" name="courierRateFar" step="0.01" min="0" placeholder="79.00" required />
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="maxRadiusKm">Max Local Delivery Radius <span class="field-hint">beyond this, courier rate applies</span></label>
+        <div class="input-wrapper">
+          <span class="input-prefix">km</span>
+          <input type="number" id="maxRadiusKm" name="maxRadiusKm" step="1" min="1" placeholder="50" required />
+        </div>
+      </div>
+      <div class="preview-box" id="preview-box">
+        <h3>Live Preview</h3>
+        <div class="preview-row"><span>5 km order:</span><span class="preview-example" id="preview-5km">-</span></div>
+        <div class="preview-row"><span>15 km order:</span><span class="preview-example" id="preview-15km">-</span></div>
+        <div class="preview-row"><span>30 km order:</span><span class="preview-example" id="preview-30km">-</span></div>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" id="reset-btn">Reset</button>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save Settings</button>
+      </div>
+    </form>
+    <div id="save-status" class="status"></div>
+  </div>
+</div>
+<script>
+  const CONFIG_API = '/api/config';
+  let originalConfig = null;
+  const form = document.getElementById('pricing-form');
+  const statusEl = document.getElementById('status');
+  const saveStatusEl = document.getElementById('save-status');
+  const saveBtn = document.getElementById('save-btn');
+
+  function setStatus(el, type, msg) {
+    el.className = 'status ' + type;
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function calcFee(baseFee, perKm, distance, threshold) {
+    const fee = baseFee + (distance * perKm);
+    if (threshold > 0 && fee >= threshold) return 'Free delivery';
+    return 'EUR' + fee.toFixed(2);
+  }
+
+  function updatePreview() {
+    const baseFee = parseFloat(document.getElementById('baseFee').value) || 0;
+    const perKm = parseFloat(document.getElementById('perKm').value) || 0;
+    const threshold = parseFloat(document.getElementById('freeDeliveryThreshold').value) || 0;
+    document.getElementById('preview-5km').textContent = calcFee(baseFee, perKm, 5, threshold);
+    document.getElementById('preview-15km').textContent = calcFee(baseFee, perKm, 15, threshold);
+    document.getElementById('preview-30km').textContent = calcFee(baseFee, perKm, 30, threshold);
+  }
+
+  ['baseFee','perKm','freeDeliveryThreshold'].forEach(function(id) {
+    document.getElementById(id).addEventListener('input', updatePreview);
+  });
+
+  async function loadConfig() {
+    try {
+      const res = await fetch(CONFIG_API);
+      const config = await res.json();
+      originalConfig = config;
+      document.getElementById('baseFee').value = config.baseFee != null ? config.baseFee : 20;
+      document.getElementById('perKm').value = config.perKm != null ? config.perKm : 1.25;
+      document.getElementById('freeDeliveryThreshold').value = config.freeDeliveryThreshold != null ? config.freeDeliveryThreshold : 0;
+      document.getElementById('courierRateStandard').value = config.courierRateStandard != null ? config.courierRateStandard : 69;
+      document.getElementById('courierRateFar').value = config.courierRateFar != null ? config.courierRateFar : 79;
+      document.getElementById('maxRadiusKm').value = config.maxRadiusKm != null ? config.maxRadiusKm : 50;
+      updatePreview();
+      statusEl.style.display = 'none';
+      form.style.display = 'block';
+    } catch (e) {
+      setStatus(statusEl, 'error', 'Failed to load settings: ' + e.message);
+    }
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    setStatus(saveStatusEl, 'loading', 'Saving settings...');
+    const payload = {
+      baseFee: parseFloat(document.getElementById('baseFee').value),
+      perKm: parseFloat(document.getElementById('perKm').value),
+      freeDeliveryThreshold: parseFloat(document.getElementById('freeDeliveryThreshold').value),
+      courierRateStandard: parseFloat(document.getElementById('courierRateStandard').value),
+      courierRateFar: parseFloat(document.getElementById('courierRateFar').value),
+      maxRadiusKm: parseFloat(document.getElementById('maxRadiusKm').value),
+    };
+    try {
+      const res = await fetch(CONFIG_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        originalConfig = data.config;
+        setStatus(saveStatusEl, 'success', 'Settings saved successfully!');
+      } else {
+        setStatus(saveStatusEl, 'error', 'Error: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err) {
+      setStatus(saveStatusEl, 'error', 'Network error: ' + err.message);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Settings';
+    }
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    if (!originalConfig) return;
+    document.getElementById('baseFee').value = originalConfig.baseFee;
+    document.getElementById('perKm').value = originalConfig.perKm;
+    document.getElementById('freeDeliveryThreshold').value = originalConfig.freeDeliveryThreshold;
+    document.getElementById('courierRateStandard').value = originalConfig.courierRateStandard;
+    document.getElementById('courierRateFar').value = originalConfig.courierRateFar;
+    document.getElementById('maxRadiusKm').value = originalConfig.maxRadiusKm;
+    updatePreview();
+    saveStatusEl.style.display = 'none';
+  });
+
+  loadConfig();
+</script>
+</body>
+</html>
