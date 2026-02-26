@@ -23,11 +23,7 @@
       max-width: 560px;
       overflow: hidden;
     }
-    .card-header {
-      background: #008060;
-      color: #fff;
-      padding: 24px 28px;
-    }
+    .card-header { background: #008060; color: #fff; padding: 24px 28px; }
     .card-header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
     .card-header p { font-size: 13px; opacity: 0.85; }
     .card-body { padding: 28px; }
@@ -46,10 +42,20 @@
     label { display: block; font-size: 13px; font-weight: 600; color: #202223; margin-bottom: 6px; }
     .field-hint { font-size: 12px; color: #6d7175; font-weight: 400; margin-left: 4px; }
     .input-wrapper { position: relative; display: flex; align-items: center; }
-    .input-prefix { position: absolute; left: 12px; color: #6d7175; font-size: 14px; pointer-events: none; z-index: 1; }
+    .input-prefix {
+      position: absolute;
+      left: 10px;
+      color: #6d7175;
+      font-size: 13px;
+      font-weight: 500;
+      pointer-events: none;
+      user-select: none;
+      z-index: 1;
+      min-width: 16px;
+    }
     input[type="number"] {
       width: 100%;
-      padding: 10px 12px 10px 28px;
+      padding: 10px 12px 10px 32px;
       border: 1.5px solid #c9cccf;
       border-radius: 8px;
       font-size: 14px;
@@ -94,7 +100,7 @@
   <div class="card-body">
     <div class="formula-box">
       <strong>Pricing Formula</strong>
-      <code>Delivery Fee = Base Fee + (Distance x EUR/km)</code>
+      <code>Delivery Fee = Base Fee + (Distance &times; &euro;/km)</code>
       <code style="margin-top:4px;display:block;">Free delivery if order total exceeds Threshold</code>
     </div>
     <div id="status" class="status loading">Loading current settings...</div>
@@ -103,21 +109,21 @@
       <div class="field-group">
         <label for="baseFee">Base Fee <span class="field-hint">charged on every delivery</span></label>
         <div class="input-wrapper">
-          <span class="input-prefix">EUR</span>
+          <span class="input-prefix">&euro;</span>
           <input type="number" id="baseFee" name="baseFee" step="0.01" min="0" placeholder="20.00" required />
         </div>
       </div>
       <div class="field-group">
         <label for="perKm">Rate per km <span class="field-hint">added for each km of distance</span></label>
         <div class="input-wrapper">
-          <span class="input-prefix">EUR</span>
+          <span class="input-prefix">&euro;</span>
           <input type="number" id="perKm" name="perKm" step="0.01" min="0" placeholder="1.25" required />
         </div>
       </div>
       <div class="field-group">
         <label for="freeDeliveryThreshold">Free Delivery Threshold <span class="field-hint">set 0 to disable</span></label>
         <div class="input-wrapper">
-          <span class="input-prefix">EUR</span>
+          <span class="input-prefix">&euro;</span>
           <input type="number" id="freeDeliveryThreshold" name="freeDeliveryThreshold" step="0.01" min="0" placeholder="0.00" required />
         </div>
       </div>
@@ -126,14 +132,14 @@
       <div class="field-group">
         <label for="courierRateStandard">Standard Courier Rate <span class="field-hint">flat rate for most counties</span></label>
         <div class="input-wrapper">
-          <span class="input-prefix">EUR</span>
+          <span class="input-prefix">&euro;</span>
           <input type="number" id="courierRateStandard" name="courierRateStandard" step="0.01" min="0" placeholder="69.00" required />
         </div>
       </div>
       <div class="field-group">
         <label for="courierRateFar">Far County Courier Rate <span class="field-hint">Cork, Kerry, Donegal</span></label>
         <div class="input-wrapper">
-          <span class="input-prefix">EUR</span>
+          <span class="input-prefix">&euro;</span>
           <input type="number" id="courierRateFar" name="courierRateFar" step="0.01" min="0" placeholder="79.00" required />
         </div>
       </div>
@@ -144,7 +150,7 @@
           <input type="number" id="maxRadiusKm" name="maxRadiusKm" step="1" min="1" placeholder="50" required />
         </div>
       </div>
-      <div class="preview-box" id="preview-box">
+      <div class="preview-box">
         <h3>Live Preview</h3>
         <div class="preview-row"><span>5 km order:</span><span class="preview-example" id="preview-5km">-</span></div>
         <div class="preview-row"><span>15 km order:</span><span class="preview-example" id="preview-15km">-</span></div>
@@ -159,12 +165,12 @@
   </div>
 </div>
 <script>
-  const CONFIG_API = '/api/config';
-  let originalConfig = null;
-  const form = document.getElementById('pricing-form');
-  const statusEl = document.getElementById('status');
-  const saveStatusEl = document.getElementById('save-status');
-  const saveBtn = document.getElementById('save-btn');
+  var CONFIG_API = '/api/config';
+  var originalConfig = null;
+  var form = document.getElementById('pricing-form');
+  var statusEl = document.getElementById('status');
+  var saveStatusEl = document.getElementById('save-status');
+  var saveBtn = document.getElementById('save-btn');
 
   function setStatus(el, type, msg) {
     el.className = 'status ' + type;
@@ -173,15 +179,15 @@
   }
 
   function calcFee(baseFee, perKm, distance, threshold) {
-    const fee = baseFee + (distance * perKm);
+    var fee = baseFee + (distance * perKm);
     if (threshold > 0 && fee >= threshold) return 'Free delivery';
-    return 'EUR' + fee.toFixed(2);
+    return '€' + fee.toFixed(2);
   }
 
   function updatePreview() {
-    const baseFee = parseFloat(document.getElementById('baseFee').value) || 0;
-    const perKm = parseFloat(document.getElementById('perKm').value) || 0;
-    const threshold = parseFloat(document.getElementById('freeDeliveryThreshold').value) || 0;
+    var baseFee = parseFloat(document.getElementById('baseFee').value) || 0;
+    var perKm = parseFloat(document.getElementById('perKm').value) || 0;
+    var threshold = parseFloat(document.getElementById('freeDeliveryThreshold').value) || 0;
     document.getElementById('preview-5km').textContent = calcFee(baseFee, perKm, 5, threshold);
     document.getElementById('preview-15km').textContent = calcFee(baseFee, perKm, 15, threshold);
     document.getElementById('preview-30km').textContent = calcFee(baseFee, perKm, 30, threshold);
@@ -191,31 +197,32 @@
     document.getElementById(id).addEventListener('input', updatePreview);
   });
 
-  async function loadConfig() {
-    try {
-      const res = await fetch(CONFIG_API);
-      const config = await res.json();
-      originalConfig = config;
-      document.getElementById('baseFee').value = config.baseFee != null ? config.baseFee : 20;
-      document.getElementById('perKm').value = config.perKm != null ? config.perKm : 1.25;
-      document.getElementById('freeDeliveryThreshold').value = config.freeDeliveryThreshold != null ? config.freeDeliveryThreshold : 0;
-      document.getElementById('courierRateStandard').value = config.courierRateStandard != null ? config.courierRateStandard : 69;
-      document.getElementById('courierRateFar').value = config.courierRateFar != null ? config.courierRateFar : 79;
-      document.getElementById('maxRadiusKm').value = config.maxRadiusKm != null ? config.maxRadiusKm : 50;
-      updatePreview();
-      statusEl.style.display = 'none';
-      form.style.display = 'block';
-    } catch (e) {
-      setStatus(statusEl, 'error', 'Failed to load settings: ' + e.message);
-    }
+  function loadConfig() {
+    fetch(CONFIG_API)
+      .then(function(res) { return res.json(); })
+      .then(function(config) {
+        originalConfig = config;
+        document.getElementById('baseFee').value = config.baseFee != null ? config.baseFee : 20;
+        document.getElementById('perKm').value = config.perKm != null ? config.perKm : 1.25;
+        document.getElementById('freeDeliveryThreshold').value = config.freeDeliveryThreshold != null ? config.freeDeliveryThreshold : 0;
+        document.getElementById('courierRateStandard').value = config.courierRateStandard != null ? config.courierRateStandard : 69;
+        document.getElementById('courierRateFar').value = config.courierRateFar != null ? config.courierRateFar : 79;
+        document.getElementById('maxRadiusKm').value = config.maxRadiusKm != null ? config.maxRadiusKm : 50;
+        updatePreview();
+        statusEl.style.display = 'none';
+        form.style.display = 'block';
+      })
+      .catch(function(e) {
+        setStatus(statusEl, 'error', 'Failed to load settings: ' + e.message);
+      });
   }
 
-  form.addEventListener('submit', async function(e) {
+  form.addEventListener('submit', function(e) {
     e.preventDefault();
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving...';
     setStatus(saveStatusEl, 'loading', 'Saving settings...');
-    const payload = {
+    var payload = {
       baseFee: parseFloat(document.getElementById('baseFee').value),
       perKm: parseFloat(document.getElementById('perKm').value),
       freeDeliveryThreshold: parseFloat(document.getElementById('freeDeliveryThreshold').value),
@@ -223,25 +230,27 @@
       courierRateFar: parseFloat(document.getElementById('courierRateFar').value),
       maxRadiusKm: parseFloat(document.getElementById('maxRadiusKm').value),
     };
-    try {
-      const res = await fetch(CONFIG_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+    fetch(CONFIG_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
       if (data.success) {
         originalConfig = data.config;
         setStatus(saveStatusEl, 'success', 'Settings saved successfully!');
       } else {
         setStatus(saveStatusEl, 'error', 'Error: ' + (data.error || 'Unknown error'));
       }
-    } catch (err) {
+    })
+    .catch(function(err) {
       setStatus(saveStatusEl, 'error', 'Network error: ' + err.message);
-    } finally {
+    })
+    .finally(function() {
       saveBtn.disabled = false;
       saveBtn.textContent = 'Save Settings';
-    }
+    });
   });
 
   document.getElementById('reset-btn').addEventListener('click', function() {
