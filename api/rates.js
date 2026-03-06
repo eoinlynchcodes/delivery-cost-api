@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     const element = googleData.rows?.[0]?.elements?.[0];
     if (!element || element.status !== 'OK') return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
-    const distanceKm = element.distance.value / 1000;
+    const distanceKm = Math.floor(element.distance.value / 1000);
 
     if (distanceKm > maxRadiusKm) return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
