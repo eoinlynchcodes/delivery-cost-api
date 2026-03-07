@@ -179,7 +179,8 @@
   }
 
   function calcFee(baseFee, perKm, distance, threshold) {
-    var fee = baseFee + (distance * perKm);
+    var distanceKm = Math.floor(distance);
+    var fee = baseFee + (distanceKm * perKm);
     if (threshold > 0 && fee >= threshold) return 'Free delivery';
     return '€' + fee.toFixed(2);
   }
