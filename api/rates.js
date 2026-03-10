@@ -56,13 +56,8 @@ export default async function handler(req, res) {
     ].filter(Boolean).join(', ');
     if (!destination) return res.status(200).json({ rates: [] });
 
-    console.log('Destination string:', destination);
-
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-      console.log('No GOOGLE_MAPS_API_KEY, using fallback');
-      return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
-    }
+    if (!apiKey) return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
     const googleUrl = `https://maps.googleapis.com/maps/api/distancematrix/json`
       + `?origins=${encodeURIComponent(ORIGIN)}`
@@ -72,22 +67,12 @@ export default async function handler(req, res) {
     const googleRes = await fetch(googleUrl);
     const googleData = await googleRes.json();
 
-    console.log('Google Maps status:', googleData.status);
-    console.log('Google Maps element status:', googleData.rows?.[0]?.elements?.[0]?.status);
-
-    if (googleData.status !== 'OK') {
-      console.log('Google Maps non-OK status:', JSON.stringify(googleData));
-      return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
-    }
+    if (googleData.status !== 'OK') return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
     const element = googleData.rows?.[0]?.elements?.[0];
-    if (!element || element.status !== 'OK') {
-      console.log('Element not OK:', JSON.stringify(element));
-      return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
-    }
+    if (!element || element.status !== 'OK') return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
     const distanceKm = Math.floor(element.distance.value / 1000);
-    console.log('Distance km:', distanceKm, 'maxRadius:', maxRadiusKm);
 
     if (distanceKm > maxRadiusKm) return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
