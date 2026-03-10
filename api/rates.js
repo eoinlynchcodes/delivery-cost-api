@@ -48,10 +48,15 @@ export default async function handler(req, res) {
     const dest = req.body?.rate?.destination;
     if (!dest) return res.status(200).json({ rates: [] });
 
+    // Shopify uses 'zip'; support both 'zip' and 'postal_code'
+    const postcode = dest.zip || dest.postal_code;
+
     const destination = [
-      dest.address1, dest.address2, dest.city, dest.province, dest.zip, dest.country,
+      dest.address1, dest.address2, dest.city, dest.province, postcode, 'Ireland',
     ].filter(Boolean).join(', ');
     if (!destination) return res.status(200).json({ rates: [] });
+
+    console.log('Destination string:', destination);
 
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
