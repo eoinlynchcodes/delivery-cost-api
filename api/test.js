@@ -1,3 +1,5 @@
+import { ORIGIN } from './constants.js';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
@@ -5,7 +7,7 @@ export default async function handler(req, res) {
 
   const shopifyPayload = {
     rate: {
-      origin: { country: 'IE', postal_code: 'N91PT7W', city: 'Ballinea' },
+      origin: { country: 'IE', postal_code: ORIGIN, city: 'Ballinea' },
       destination: { country: 'IE', postal_code: eircode, city: '' },
       items: [{ name: 'Test Product', quantity: 1, grams: 1000, price: 5000 }],
       currency: 'EUR',
