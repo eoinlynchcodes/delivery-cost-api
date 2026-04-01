@@ -4,6 +4,7 @@
     { "source": "/api/health", "destination": "/api/health.js" },
     { "source": "/api/test", "destination": "/api/test.js" },
     { "source": "/api/config", "destination": "/api/config.js" },
+    { "source": "/api/distance", "destination": "/api/distance.js" },
     { "source": "/api/setup", "destination": "/api/setup.js" },
     { "source": "/api/auth/callback", "destination": "/api/auth/callback.js" },
     { "source": "/", "destination": "/public/index.html" }

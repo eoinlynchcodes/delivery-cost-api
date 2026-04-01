@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv';
-import { ORIGIN, DEFAULTS, FAR_COUNTIES } from './constants.js';
+import { ORIGIN, DEFAULTS, FAR_COUNTIES, selectBand } from './constants.js';
 
 function isFarCounty(dest) {
   const province = (dest?.province || '').toLowerCase();
@@ -24,8 +24,8 @@ function getFallbackRate(dest, config) {
 
 async function getConfig() {
   try {
-    const config = await kv.get('delivery_config');
-    return config || DEFAULTS;
+    const stored = await kv.get('delivery_config');
+    return { ...DEFAULTS, ...(stored || {}) };
   } catch {
     return DEFAULTS;
   }
@@ -40,8 +40,6 @@ export default async function handler(req, res) {
 
   try {
     const config = await getConfig();
-    const baseFee = config.baseFee ?? DEFAULTS.baseFee;
-    const perKm = config.perKm ?? DEFAULTS.perKm;
     const maxRadiusKm = config.maxRadiusKm ?? DEFAULTS.maxRadiusKm;
     const freeDeliveryThreshold = config.freeDeliveryThreshold ?? DEFAULTS.freeDeliveryThreshold;
 
@@ -76,25 +74,28 @@ export default async function handler(req, res) {
 
     if (distanceKm > maxRadiusKm) return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
+    const orderTotal = (req.body?.rate?.line_items || []).reduce((sum, item) => {
+      return sum + (parseFloat(item.price || 0) * (item.quantity || 1));
+    }, 0);
+
     // Apply free delivery threshold
-    if (freeDeliveryThreshold > 0) {
-      const orderTotal = (req.body?.rate?.line_items || []).reduce((sum, item) => {
-        return sum + (parseFloat(item.price || 0) * (item.quantity || 1));
-      }, 0);
-      if (orderTotal >= freeDeliveryThreshold) {
-        return res.status(200).json({
-          rates: [{
-            service_name: 'Free Delivery',
-            service_code: 'FREE_DELIVERY',
-            total_price: '0',
-            currency: 'EUR',
-            description: 'Free delivery on this order',
-          }],
-        });
-      }
+    if (freeDeliveryThreshold > 0 && orderTotal >= freeDeliveryThreshold) {
+      return res.status(200).json({
+        rates: [{
+          service_name: 'Free Delivery',
+          service_code: 'FREE_DELIVERY',
+          total_price: '0',
+          currency: 'EUR',
+          description: 'Free delivery on this order',
+        }],
+      });
     }
 
-    const deliveryCost = baseFee + (distanceKm * perKm);
+    const priceBands = Array.isArray(config.priceBands) && config.priceBands.length
+      ? config.priceBands
+      : DEFAULTS.priceBands;
+    const band = selectBand(priceBands, orderTotal);
+    const deliveryCost = band.baseFee + (distanceKm * band.perKm);
     const totalPriceCents = Math.round(deliveryCost * 100);
 
     return res.status(200).json({
@@ -103,7 +104,7 @@ export default async function handler(req, res) {
         service_code: 'LOCAL_DELIVERY',
         total_price: String(totalPriceCents),
         currency: 'EUR',
-        description: `\u20AC${baseFee} base + ${distanceKm} km \u00D7 \u20AC${perKm}/km = \u20AC${deliveryCost.toFixed(2)}`,
+        description: `€${band.baseFee} base + ${distanceKm} km × €${band.perKm}/km = €${deliveryCost.toFixed(2)}`,
       }],
     });
   } catch (error) {

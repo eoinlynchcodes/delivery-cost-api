@@ -9,8 +9,8 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const config = await kv.get('delivery_config');
-      return res.status(200).json(config || DEFAULTS);
+      const stored = await kv.get('delivery_config');
+      return res.status(200).json({ ...DEFAULTS, ...(stored || {}) });
     } catch {
       return res.status(200).json(DEFAULTS);
     }
@@ -20,12 +20,19 @@ export default async function handler(req, res) {
     try {
       const b = req.body;
       const config = {
-        baseFee: parseFloat(b.baseFee) ?? DEFAULTS.baseFee,
-        perKm: parseFloat(b.perKm) ?? DEFAULTS.perKm,
-        maxRadiusKm: parseFloat(b.maxRadiusKm) ?? DEFAULTS.maxRadiusKm,
-        courierRateStandard: parseFloat(b.courierRateStandard) ?? DEFAULTS.courierRateStandard,
-        courierRateFar: parseFloat(b.courierRateFar) ?? DEFAULTS.courierRateFar,
-        freeDeliveryThreshold: parseFloat(b.freeDeliveryThreshold) ?? 0,
+        baseFee: parseFloat(b.baseFee) || DEFAULTS.baseFee,
+        perKm: parseFloat(b.perKm) || DEFAULTS.perKm,
+        maxRadiusKm: parseFloat(b.maxRadiusKm) || DEFAULTS.maxRadiusKm,
+        courierRateStandard: parseFloat(b.courierRateStandard) || DEFAULTS.courierRateStandard,
+        courierRateFar: parseFloat(b.courierRateFar) || DEFAULTS.courierRateFar,
+        freeDeliveryThreshold: parseFloat(b.freeDeliveryThreshold) || 0,
+        priceBands: Array.isArray(b.priceBands)
+          ? b.priceBands.map(band => ({
+              minOrderTotal: parseFloat(band.minOrderTotal) || 0,
+              baseFee:       parseFloat(band.baseFee)       || DEFAULTS.baseFee,
+              perKm:         parseFloat(band.perKm)         || DEFAULTS.perKm,
+            }))
+          : DEFAULTS.priceBands,
       };
       await kv.set('delivery_config', config);
       return res.status(200).json({ success: true, config });
