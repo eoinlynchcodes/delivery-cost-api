@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delivery Pricing — Lynch's</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f6f6f7;
+      color: #202223;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 24px 16px 48px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #202223;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      color: #6d7175;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e1e3e5;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .card-hint {
+      color: #6d7175;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Table ── */
+    .bands-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .bands-table thead th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #6d7175;
+      padding: 0 8px 8px;
+      border-bottom: 1px solid #e1e3e5;
+    }
+
+    .bands-table thead th:not(:first-child) { text-align: right; }
+
+    .bands-table tbody tr { border-bottom: 1px solid #f1f2f3; }
+    .bands-table tbody tr:last-child { border-bottom: none; }
+    .bands-table tbody tr:hover { background: #fafafa; }
+
+    .bands-table td {
+      padding: 10px 8px;
+      vertical-align: middle;
+    }
+
+    .bands-table td:not(:first-child) { text-align: right; }
+
+    /* ── Inputs ── */
+    .field-wrap {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #c9cccf;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .field-wrap:focus-within {
+      outline: 2px solid #008060;
+      outline-offset: 1px;
+    }
+
+    .field-prefix {
+      padding: 0 6px;
+      background: #f6f6f7;
+      color: #6d7175;
+      border-right: 1px solid #c9cccf;
+      font-size: 13px;
+      line-height: 28px;
+      user-select: none;
+    }
+
+    .field-input {
+      width: 72px;
+      padding: 4px 8px;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      background: transparent;
+      text-align: right;
+    }
+
+    /* ── Free row ── */
+    .free-row td { background: #f2fbf6; }
+
+    .free-badge {
+      display: inline-block;
+      background: #008060;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      padding: 2px 7px;
+      border-radius: 10px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .preview-col {
+      font-size: 12px;
+      color: #6d7175;
+      text-align: left !important;
+      min-width: 160px;
+    }
+
+    /* ── Remove button ── */
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #c9cccf;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color .15s, background .15s;
+    }
+    .remove-btn:hover:not(:disabled) { color: #d72c0d; background: #fef2f2; }
+    .remove-btn:disabled { opacity: .25; cursor: default; }
+
+    /* ── Footer buttons ── */
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+
+    .btn-primary {
+      background: #008060;
+      color: #fff;
+      border-color: #006e52;
+    }
+    .btn-primary:hover:not(:disabled) { background: #006e52; }
+    .btn-primary:disabled { opacity: .6; cursor: default; }
+
+    .btn-secondary {
+      background: #fff;
+      color: #202223;
+      border-color: #c9cccf;
+    }
+    .btn-secondary:hover { background: #f6f6f7; }
+
+    .btn-ghost {
+      background: none;
+      color: #6d7175;
+      border-color: transparent;
+    }
+    .btn-ghost:hover { color: #202223; background: #f6f6f7; }
+
+    /* ── Status ── */
+    .status {
+      font-size: 13px;
+      font-weight: 500;
+      display: none;
+    }
+    .status.visible { display: inline-flex; align-items: center; gap: 5px; }
+    .status-success { color: #008060; }
+    .status-error   { color: #d72c0d; }
+
+    /* ── Loading skeleton ── */
+    .loading-text {
+      color: #6d7175;
+      font-style: italic;
+      padding: 12px 0;
+    }
+
+    /* ── Unsaved banner ── */
+    .unsaved-banner {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #856404;
+      margin-bottom: 12px;
+    }
+    .unsaved-banner.visible { display: block; }
+  </style>
+</head>
+<body>
+
+  <p class="page-title">Delivery Pricing</p>
+  <p class="page-subtitle">Set price bands for Lynch's delivery. Changes apply immediately to the Shopify checkout.</p>
+
+  <div class="unsaved-banner" id="unsavedBanner">
+    ⚠️ You have unsaved changes.
+  </div>
+
+  <div class="card">
+    <p class="card-title">Price Bands</p>
+    <p class="card-hint">The band with the highest minimum order that's still ≤ the customer's order total is used. Orders above the free delivery threshold get free delivery.</p>
+
+    <div id="loading" class="loading-text">Loading current rates…</div>
+
+    <table class="bands-table" id="bandsTable" style="display:none">
+      <thead>
+        <tr>
+          <th>Min order (€)</th>
+          <th>Base fee (€)</th>
+          <th>Per km (€)</th>
+          <th class="preview-col">Applies to</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="bandRows"></tbody>
+      <tbody id="freeRow"></tbody>
+    </table>
+
+    <div class="actions" id="actions" style="display:none">
+      <button class="btn btn-secondary" onclick="addBand()">+ Add Band</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveBands()">Save Changes</button>
+      <button class="btn btn-ghost" onclick="resetDefaults()">Reset to defaults</button>
+      <span class="status status-success" id="statusOk">✓ Saved</span>
+      <span class="status status-error"   id="statusErr"></span>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/config';
+
+    const DEFAULTS = {
+      freeDeliveryThreshold: 400,
+      priceBands: [
+        { minOrderTotal: 0,   baseFee: 15.00, perKm: 1.25 },
+        { minOrderTotal: 220, baseFee: 10.00, perKm: 0.50 },
+      ],
+    };
+
+    let bands = [];
+    let freeThreshold = 400;
+    let dirty = false;
+
+    // ── Helpers ──────────────────────────────────────────
+    function sorted() {
+      return [...bands].sort((a, b) => a.minOrderTotal - b.minOrderTotal);
+    }
+
+    function previewLabel(band) {
+      const s = sorted();
+      const idx = s.findIndex(b => b.minOrderTotal === band.minOrderTotal);
+      const next = s[idx + 1];
+      const upper = next
+        ? `–€${(next.minOrderTotal - 1)}`
+        : freeThreshold > 0 ? `–€${freeThreshold - 1}` : '+';
+      return `Orders €${band.minOrderTotal}${upper}`;
+    }
+
+    function markDirty() {
+      dirty = true;
+      document.getElementById('unsavedBanner').classList.add('visible');
+      clearStatus();
+    }
+
+    function clearStatus() {
+      document.getElementById('statusOk').classList.remove('visible');
+      document.getElementById('statusErr').classList.remove('visible');
+    }
+
+    // ── Render ───────────────────────────────────────────
+    function render() {
+      const tbody = document.getElementById('bandRows');
+      const freeRowEl = document.getElementById('freeRow');
+      const s = sorted();
+      tbody.innerHTML = '';
+
+      s.forEach((band, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <span class="field-wrap">
+              <span class="field-prefix">€</span>
+              <input class="field-input" type="number" step="1" min="0"
+                value="${band.minOrderTotal}"
+                onchange="updateBand(${band._id}, 'minOrderTotal', this.value)" />
+            </span>
+          </td>
+          <td>
+            <span class="field-wrap">
+              <span class="field-prefix">€</span>
+              <input class="field-input" type="number" step="0.50" min="0"
+                value="${band.baseFee}"
+                onchange="updateBand(${band._id}, 'baseFee', this.value)" />
+            </span>
+          </td>
+          <td>
+            <span class="field-wrap">
+              <span class="field-prefix">€</span>
+              <input class="field-input" type="number" step="0.05" min="0"
+                value="${band.perKm}"
+                onchange="updateBand(${band._id}, 'perKm', this.value)" />
+            </span>
+          </td>
+          <td class="preview-col">${previewLabel(band)}</td>
+          <td>
+            <button class="remove-btn" onclick="removeBand(${band._id})"
+              ${bands.length <= 1 ? 'disabled' : ''} title="Remove">✕</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      freeRowEl.innerHTML = `
+        <tr class="free-row">
+          <td>
+            <span class="field-wrap">
+              <span class="field-prefix">€</span>
+              <input class="field-input" type="number" step="1" min="0"
+                value="${freeThreshold}"
+                onchange="updateFreeThreshold(this.value)" />
+            </span>
+          </td>
+          <td colspan="2" style="color:#6d7175; font-size:13px; text-align:left">
+            <span class="free-badge">FREE</span>
+            Free delivery — no charge
+          </td>
+          <td class="preview-col" style="color:#6d7175;font-size:12px">
+            Set to 0 to disable
+          </td>
+          <td></td>
+        </tr>
+      `;
+    }
+
+    // ── Mutations ─────────────────────────────────────────
+    let _nextId = 0;
+
+    function updateBand(id, field, value) {
+      bands = bands.map(b => b._id === id ? { ...b, [field]: parseFloat(value) || 0 } : b);
+      markDirty();
+      render();
+    }
+
+    function updateFreeThreshold(value) {
+      freeThreshold = parseFloat(value) || 0;
+      markDirty();
+      render();
+    }
+
+    function addBand() {
+      const s = sorted();
+      const highest = s[s.length - 1]?.minOrderTotal ?? 0;
+      bands.push({ _id: _nextId++, minOrderTotal: highest + 100, baseFee: 10, perKm: 0.50 });
+      markDirty();
+      render();
+    }
+
+    function removeBand(id) {
+      if (bands.length <= 1) return;
+      bands = bands.filter(b => b._id !== id);
+      markDirty();
+      render();
+    }
+
+    function resetDefaults() {
+      bands = DEFAULTS.priceBands.map(b => ({ ...b, _id: _nextId++ }));
+      freeThreshold = DEFAULTS.freeDeliveryThreshold;
+      markDirty();
+      render();
+    }
+
+    // ── Load ─────────────────────────────────────────────
+    async function load() {
+      try {
+        const res = await fetch(API);
+        const data = await res.json();
+        const raw = Array.isArray(data.priceBands) && data.priceBands.length
+          ? data.priceBands : DEFAULTS.priceBands;
+        bands = raw.map(b => ({ ...b, _id: _nextId++ }));
+        freeThreshold = data.freeDeliveryThreshold ?? DEFAULTS.freeDeliveryThreshold;
+      } catch {
+        bands = DEFAULTS.priceBands.map(b => ({ ...b, _id: _nextId++ }));
+        freeThreshold = DEFAULTS.freeDeliveryThreshold;
+      }
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('bandsTable').style.display = 'table';
+      document.getElementById('actions').style.display = 'flex';
+      render();
+    }
+
+    // ── Save ─────────────────────────────────────────────
+    async function saveBands() {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+      clearStatus();
+
+      const payload = {
+        priceBands: bands.map(({ _id, ...rest }) => rest),
+        freeDeliveryThreshold: freeThreshold,
+      };
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        dirty = false;
+        document.getElementById('unsavedBanner').classList.remove('visible');
+        document.getElementById('statusOk').classList.add('visible');
+      } catch (err) {
+        const el = document.getElementById('statusErr');
+        el.textContent = `Could not save: ${err.message}`;
+        el.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
