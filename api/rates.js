@@ -104,7 +104,7 @@ export default async function handler(req, res) {
         service_code: 'LOCAL_DELIVERY',
         total_price: String(totalPriceCents),
         currency: 'EUR',
-        description: `€${band.baseFee} base + ${distanceKm} km × €${band.perKm}/km = €${deliveryCost.toFixed(2)}`,
+        description: `€${band.baseFee} base + €${band.perKm}/km`,
       }],
     });
   } catch (error) {
