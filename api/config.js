@@ -25,14 +25,6 @@ export default async function handler(req, res) {
         maxRadiusKm: parseFloat(b.maxRadiusKm) || DEFAULTS.maxRadiusKm,
         courierRateStandard: parseFloat(b.courierRateStandard) || DEFAULTS.courierRateStandard,
         courierRateFar: parseFloat(b.courierRateFar) || DEFAULTS.courierRateFar,
-        freeDeliveryThreshold: parseFloat(b.freeDeliveryThreshold) || 0,
-        priceBands: Array.isArray(b.priceBands)
-          ? b.priceBands.map(band => ({
-              minOrderTotal: parseFloat(band.minOrderTotal) || 0,
-              baseFee:       parseFloat(band.baseFee)       || DEFAULTS.baseFee,
-              perKm:         parseFloat(band.perKm)         || DEFAULTS.perKm,
-            }))
-          : DEFAULTS.priceBands,
       };
       await kv.set('delivery_config', config);
       return res.status(200).json({ success: true, config });

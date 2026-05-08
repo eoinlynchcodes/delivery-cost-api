@@ -21,7 +21,6 @@ export default async function handler(req, res) {
       maxRadiusKm: config.maxRadiusKm,
       courierRateStandard: config.courierRateStandard,
       courierRateFar: config.courierRateFar,
-      freeDeliveryThreshold: config.freeDeliveryThreshold,
     },
   });
 }

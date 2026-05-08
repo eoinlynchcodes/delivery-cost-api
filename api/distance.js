@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv';
-import { ORIGIN, DEFAULTS, selectBand } from './constants.js';
+import { ORIGIN, DEFAULTS } from './constants.js';
 
 async function getConfig() {
   try {
@@ -17,16 +17,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { eircode, cartTotal = '0' } = req.query;
+  const { eircode } = req.query;
   if (!eircode) return res.status(400).json({ error: 'eircode is required' });
 
   const config = await getConfig();
-  const freeThreshold = config.freeDeliveryThreshold ?? DEFAULTS.freeDeliveryThreshold;
-  const total = parseFloat(cartTotal) || 0;
-
-  if (freeThreshold > 0 && total >= freeThreshold) {
-    return res.status(200).json({ free: true, distanceKm: 0, cost: 0 });
-  }
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Maps API key not configured' });
@@ -57,14 +51,11 @@ export default async function handler(req, res) {
       return res.status(200).json({ outOfRange: true, distanceKm });
     }
 
-    const priceBands = Array.isArray(config.priceBands) && config.priceBands.length
-      ? config.priceBands
-      : DEFAULTS.priceBands;
+    const baseFee = config.baseFee ?? DEFAULTS.baseFee;
+    const perKm = config.perKm ?? DEFAULTS.perKm;
+    const cost = parseFloat((baseFee + distanceKm * perKm).toFixed(2));
 
-    const band = selectBand(priceBands, cartTotal);
-    const cost = parseFloat((band.baseFee + distanceKm * band.perKm).toFixed(2));
-
-    return res.status(200).json({ distanceKm, cost, band });
+    return res.status(200).json({ distanceKm, cost, baseFee, perKm });
   } catch (error) {
     console.error('distance.js error:', error);
     return res.status(500).json({ error: 'Internal error' });

@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv';
-import { ORIGIN, DEFAULTS, FAR_COUNTIES, selectBand } from './constants.js';
+import { ORIGIN, DEFAULTS, FAR_COUNTIES } from './constants.js';
 
 function isFarCounty(dest) {
   const province = (dest?.province || '').toLowerCase();
@@ -41,7 +41,8 @@ export default async function handler(req, res) {
   try {
     const config = await getConfig();
     const maxRadiusKm = config.maxRadiusKm ?? DEFAULTS.maxRadiusKm;
-    const freeDeliveryThreshold = config.freeDeliveryThreshold ?? DEFAULTS.freeDeliveryThreshold;
+    const baseFee = config.baseFee ?? DEFAULTS.baseFee;
+    const perKm = config.perKm ?? DEFAULTS.perKm;
 
     const dest = req.body?.rate?.destination;
     if (!dest) return res.status(200).json({ rates: [] });
@@ -74,28 +75,7 @@ export default async function handler(req, res) {
 
     if (distanceKm > maxRadiusKm) return res.status(200).json({ rates: [getFallbackRate(dest, config)] });
 
-    const orderTotal = (req.body?.rate?.line_items || []).reduce((sum, item) => {
-      return sum + (parseFloat(item.price || 0) * (item.quantity || 1));
-    }, 0);
-
-    // Apply free delivery threshold
-    if (freeDeliveryThreshold > 0 && orderTotal >= freeDeliveryThreshold) {
-      return res.status(200).json({
-        rates: [{
-          service_name: 'Free Delivery',
-          service_code: 'FREE_DELIVERY',
-          total_price: '0',
-          currency: 'EUR',
-          description: 'Free delivery on this order',
-        }],
-      });
-    }
-
-    const priceBands = Array.isArray(config.priceBands) && config.priceBands.length
-      ? config.priceBands
-      : DEFAULTS.priceBands;
-    const band = selectBand(priceBands, orderTotal);
-    const deliveryCost = band.baseFee + (distanceKm * band.perKm);
+    const deliveryCost = baseFee + distanceKm * perKm;
     const totalPriceCents = Math.round(deliveryCost * 100);
 
     return res.status(200).json({
@@ -104,7 +84,7 @@ export default async function handler(req, res) {
         service_code: 'LOCAL_DELIVERY',
         total_price: String(totalPriceCents),
         currency: 'EUR',
-        description: `€${band.baseFee} base + €${band.perKm}/km`,
+        description: `€${baseFee} base + €${perKm}/km`,
       }],
     });
   } catch (error) {
