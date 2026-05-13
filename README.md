@@ -1,6 +1,11 @@
+By Eoin Lynch: This repository is responsible for setting price variables in the shipping cost calc that is used in Shopify. 
+
+
 # delivery-cost-api
 
 A Vercel serverless API for calculating distance-based delivery costs, designed to integrate with Shopify as a carrier service.
+
+
 
 ## Pricing Formula
 
